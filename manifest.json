@@ -1,0 +1,23 @@
+{
+  "id": "com.mimaraka.eagle-ct-tagger",
+  "version": "0.1.0",
+  "platform": "win",
+  "arch": "all",
+  "name": "Eagle CT Tagger",
+  "logo": "/logo.png",
+  "keywords": ["camie-tagger", "tagger", "illustration", "classifier"],
+  "devTools": true,
+  "main": {
+    "url": "index.html",
+    "width": 760,
+    "height": 720,
+    "minWidth": 700,
+    "minHeight": 640,
+    "resizable": true,
+    "maximizable": true,
+    "fullscreenable": false,
+    "backgroundColor": "#f3efe6",
+    "multiple": false,
+    "runAfterInstall": false
+  }
+}

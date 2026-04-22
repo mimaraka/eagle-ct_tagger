@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eagle CT Tagger</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Camie Tagger for Eagle</p>
+        <h1>Eagle CT Tagger</h1>
+        <p class="lede">
+          選択中のイラストを camie-tagger で解析し、`CT/`
+          プレフィックス付きタグを Eagle に付与します。
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>設定</h2>
+          <button id="browseRepoButton" class="secondary" type="button">
+            リポジトリを選択
+          </button>
+        </div>
+
+        <label class="field">
+          <span>camie-tagger リポジトリパス</span>
+          <input
+            id="repoPathInput"
+            type="text"
+            placeholder="C:\path\to\camie-tagger"
+          />
+        </label>
+
+        <div class="grid">
+          <label class="field">
+            <span>閾値</span>
+            <input
+              id="thresholdInput"
+              type="number"
+              min="0"
+              max="1"
+              step="0.01"
+              value="0.35"
+            />
+          </label>
+
+          <label class="field">
+            <span>カテゴリごとの最大タグ数</span>
+            <input
+              id="topKInput"
+              type="number"
+              min="1"
+              max="200"
+              step="1"
+              value="50"
+            />
+          </label>
+        </div>
+
+        <fieldset class="field category-fieldset">
+          <legend>付与するタグカテゴリ</legend>
+          <div class="category-grid">
+            <label class="check">
+              <input id="categoryGeneral" type="checkbox" value="general" checked />
+              <span>general</span>
+            </label>
+            <label class="check">
+              <input id="categoryCharacter" type="checkbox" value="character" checked />
+              <span>character</span>
+            </label>
+            <label class="check">
+              <input id="categoryCopyright" type="checkbox" value="copyright" checked />
+              <span>copyright</span>
+            </label>
+            <label class="check">
+              <input id="categoryArtist" type="checkbox" value="artist" checked />
+              <span>artist</span>
+            </label>
+            <label class="check">
+              <input id="categoryMeta" type="checkbox" value="meta" checked />
+              <span>meta</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button id="saveSettingsButton" class="secondary" type="button">
+            設定を保存
+          </button>
+          <button id="runButton" class="primary" type="button">
+            選択中アイテムを解析
+          </button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>実行状況</h2>
+          <span id="selectionCount" class="badge">選択中 0 件</span>
+        </div>
+
+        <div id="statusCard" class="status-card idle">
+          <strong id="statusTitle">待機中</strong>
+          <p id="statusText">
+            Eagle でアイテムを選択してから実行してください。
+          </p>
+        </div>
+
+        <div class="meter">
+          <div id="progressBar" class="meter-bar"></div>
+        </div>
+
+        <pre id="logOutput" class="log-output">初期化待ち...</pre>
+      </section>
+    </main>
+
+    <script src="./src/plugin.js"></script>
+  </body>
+</html>
