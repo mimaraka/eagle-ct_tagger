@@ -5,6 +5,8 @@ const SETTINGS_KEY = "eagle-ct-classifier.settings";
 const TAG_GROUP_NAME = "Camie Tagger";
 const TAG_PREFIX = "CT/";
 const DEFAULT_CATEGORIES = ["general", "character", "copyright", "artist", "meta"];
+const LOG_FLUSH_INTERVAL_MS = 100;
+const MAX_VISIBLE_LOG_LINES = 400;
 const SUPPORTED_EXTENSIONS = new Set([
   "jpg",
   "jpeg",
@@ -21,6 +23,9 @@ let pluginContext = null;
 let isRunning = false;
 let CamieTagger = null;
 let resolveTaggerPaths = null;
+let logFlushTimer = null;
+let logLines = [];
+let pendingLogLines = [];
 
 const elements = {
   repoPathInput: document.getElementById("repoPathInput"),
@@ -77,8 +82,52 @@ function currentSettings() {
 
 function appendLog(message) {
   const timestamp = new Date().toLocaleTimeString("ja-JP", { hour12: false });
-  elements.logOutput.textContent += `\n[${timestamp}] ${message}`;
+  pendingLogLines.push(`[${timestamp}] ${message}`);
+  scheduleLogFlush();
+}
+
+function scheduleLogFlush() {
+  if (logFlushTimer != null) {
+    return;
+  }
+
+  logFlushTimer = setTimeout(() => {
+    flushLogs();
+  }, LOG_FLUSH_INTERVAL_MS);
+}
+
+function flushLogs(force = false) {
+  if (logFlushTimer != null) {
+    clearTimeout(logFlushTimer);
+    logFlushTimer = null;
+  }
+
+  if (!force && pendingLogLines.length === 0) {
+    return;
+  }
+
+  if (pendingLogLines.length > 0) {
+    logLines.push(...pendingLogLines);
+    pendingLogLines = [];
+  }
+
+  if (logLines.length > MAX_VISIBLE_LOG_LINES) {
+    logLines = logLines.slice(-MAX_VISIBLE_LOG_LINES);
+  }
+
+  elements.logOutput.textContent = logLines.join("\n");
   elements.logOutput.scrollTop = elements.logOutput.scrollHeight;
+}
+
+function resetLogs(initialMessage = "") {
+  if (logFlushTimer != null) {
+    clearTimeout(logFlushTimer);
+    logFlushTimer = null;
+  }
+
+  logLines = initialMessage ? [initialMessage] : [];
+  pendingLogLines = [];
+  elements.logOutput.textContent = initialMessage;
 }
 
 function setStatus(mode, title, text) {
@@ -247,8 +296,21 @@ function collectTags(result, allowedCategories) {
 }
 
 async function applyTagsToItem(item, tags) {
-  item.tags = uniqueStrings([...(item.tags || []), ...tags]);
+  if (tags.length === 0) {
+    return 0;
+  }
+
+  const existingTags = uniqueStrings(item.tags || []);
+  const existingTagSet = new Set(existingTags);
+  const tagsToAdd = tags.filter((tag) => !existingTagSet.has(tag));
+
+  if (tagsToAdd.length === 0) {
+    return 0;
+  }
+
+  item.tags = [...existingTags, ...tagsToAdd];
   await item.save();
+  return tagsToAdd.length;
 }
 
 function getPluginScriptPath() {
@@ -332,7 +394,6 @@ async function runTagging() {
         const item = selectedItems[index];
         const progressText = `${index + 1}/${selectedItems.length}: ${item.name || path.basename(item.filePath)}`;
         setStatus("running", "解析中", progressText);
-        appendLog(`推論開始: ${item.filePath}`);
 
         let result;
         try {
@@ -352,15 +413,17 @@ async function runTagging() {
         }
 
         const tags = collectTags(result, allowedCategories);
-        await applyTagsToItem(item, tags);
+        const appliedTagCount = await applyTagsToItem(item, tags);
 
         for (const tag of tags) {
           allTags.add(tag);
         }
 
-        totalAppliedTags += tags.length;
+        totalAppliedTags += appliedTagCount;
         setProgress(((index + 1) / selectedItems.length) * 100);
-        appendLog(`推論完了: ${tags.length} タグ追加, ${result.inference_time_ms} ms`);
+        appendLog(
+          `推論完了: ${tags.length} タグ抽出, ${appliedTagCount} タグ追加, ${appliedTagCount > 0 ? "保存あり" : "保存なし"}, ${result.inference_time_ms} ms`,
+        );
       }
     } finally {
       await tagger.shutdown().catch((error) => {
@@ -390,6 +453,7 @@ async function runTagging() {
     eagle.log.error(error?.stack || message);
     await eagle.dialog.showErrorBox("Eagle CT Classifier", message);
   } finally {
+    flushLogs(true);
     setRunningState(false);
     await refreshSelectionCount();
   }
@@ -443,7 +507,7 @@ function bindEvents() {
 eagle.onPluginCreate((plugin) => {
   pluginContext = plugin;
   loadTaggerModule();
-  elements.logOutput.textContent = "プラグインを初期化しました。";
+  resetLogs("プラグインを初期化しました。");
   hydrateForm();
   bindEvents();
   refreshSelectionCount();
