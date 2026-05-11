@@ -56,6 +56,15 @@ function writeSettings(settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
+function bundledRepoPath() {
+  if (!pluginContext?.path) {
+    return "";
+  }
+
+  const repoPath = path.join(pluginContext.path, "camie-tagger-v2");
+  return fs.existsSync(repoPath) ? repoPath : "";
+}
+
 function currentSettings() {
   const categories = [
     elements.categoryGeneral,
@@ -68,7 +77,7 @@ function currentSettings() {
     .map((element) => element.value);
 
   return {
-    repoPath: elements.repoPathInput.value.trim(),
+    repoPath: elements.repoPathInput.value.trim() || bundledRepoPath(),
     threshold: Number(elements.thresholdInput.value),
     topK: Number(elements.topKInput.value),
     categories,
@@ -403,6 +412,11 @@ function hydrateForm() {
       : new Set(DEFAULT_CATEGORIES);
   if (settings.repoPath) {
     elements.repoPathInput.value = settings.repoPath;
+  } else {
+    const repoPath = bundledRepoPath();
+    if (repoPath) {
+      elements.repoPathInput.value = repoPath;
+    }
   }
   if (typeof settings.threshold === "number") {
     elements.thresholdInput.value = String(settings.threshold);
