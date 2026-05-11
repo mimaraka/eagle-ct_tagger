@@ -42,12 +42,19 @@ def load_metadata(path):
     with open(path, "r", encoding="utf-8") as f:
         metadata = json.load(f)
 
-    dataset_info = metadata["dataset_info"]
-    tag_mapping = dataset_info["tag_mapping"]
-    idx_to_tag = tag_mapping["idx_to_tag"]
-    tag_to_category = tag_mapping["tag_to_category"]
-    total_tags = dataset_info["total_tags"]
-    img_size = metadata["model_info"]["img_size"]
+    if "dataset_info" in metadata:
+        dataset_info = metadata["dataset_info"]
+        tag_mapping = dataset_info["tag_mapping"]
+        idx_to_tag = tag_mapping["idx_to_tag"]
+        tag_to_category = tag_mapping["tag_to_category"]
+        total_tags = dataset_info["total_tags"]
+        img_size = metadata["model_info"]["img_size"]
+    else:
+        idx_to_tag = metadata["idx_to_tag"]
+        tag_to_category = metadata["tag_to_category"]
+        total_tags = metadata["total_tags"]
+        input_shape = metadata.get("input_shape", [1, 3, 512, 512])
+        img_size = input_shape[-1]
 
     return idx_to_tag, tag_to_category, total_tags, img_size
 

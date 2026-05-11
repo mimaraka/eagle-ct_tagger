@@ -20,14 +20,16 @@
 
 ## 動作要件
 
-- Windows 版 Eagle
+- macOS 版または Windows 版 Eagle
 - `camie-tagger` のリポジトリ一式
 - `camie-tagger` 側で仮想環境作成済みであること
-- `venv/Scripts/python.exe` から推論を実行できること
+- macOS では `venv/bin/python` または `.venv/bin/python` から推論を実行できること
+- Windows では `venv\Scripts\python.exe` または `.venv\Scripts\python.exe` から推論を実行できること
 
 本プラグインは、ユーザーが指定した `camie-tagger` リポジトリ内の以下のファイルを利用します。
 
-- `venv/Scripts/python.exe`
+- macOS: `venv/bin/python` または `.venv/bin/python`
+- Windows: `venv\Scripts\python.exe` または `.venv\Scripts\python.exe`
 - `camie-tagger-v2.onnx`
 - `camie-tagger-v2-metadata.json`
 

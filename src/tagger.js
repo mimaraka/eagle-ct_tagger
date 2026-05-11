@@ -12,8 +12,29 @@ const readline = require("readline");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 
+function pythonCandidates(basePath) {
+  const isWindows = process.platform === "win32";
+  if (isWindows) {
+    return [
+      path.join(basePath, "venv", "Scripts", "python.exe"),
+      path.join(basePath, ".venv", "Scripts", "python.exe"),
+    ];
+  }
+
+  return [
+    path.join(basePath, "venv", "bin", "python"),
+    path.join(basePath, ".venv", "bin", "python"),
+    path.join(basePath, "venv", "bin", "python3"),
+    path.join(basePath, ".venv", "bin", "python3"),
+  ];
+}
+
+function firstExistingPath(paths) {
+  return paths.find((candidate) => fs.existsSync(candidate)) || paths[0];
+}
+
 const DEFAULTS = {
-  pythonPath: path.join(PROJECT_ROOT, "camie-tagger-v2", "venv", "Scripts", "python.exe"),
+  pythonPath: firstExistingPath(pythonCandidates(path.join(PROJECT_ROOT, "camie-tagger-v2"))),
   modelPath: path.join(PROJECT_ROOT, "camie-tagger-v2", "camie-tagger-v2.onnx"),
   metadataPath: path.join(PROJECT_ROOT, "camie-tagger-v2", "camie-tagger-v2-metadata.json"),
   scriptPath: path.join(PROJECT_ROOT, "src", "infer.py"),
@@ -33,7 +54,7 @@ function resolveTaggerPaths(repoPath) {
 
   const resolvedRepoPath = path.resolve(repoPath);
   return {
-    pythonPath: path.join(resolvedRepoPath, "venv", "Scripts", "python.exe"),
+    pythonPath: firstExistingPath(pythonCandidates(resolvedRepoPath)),
     modelPath: path.join(resolvedRepoPath, "camie-tagger-v2.onnx"),
     metadataPath: path.join(resolvedRepoPath, "camie-tagger-v2-metadata.json"),
   };

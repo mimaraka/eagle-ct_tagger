@@ -1,7 +1,7 @@
 {
   "id": "com.mimaraka.eagle-ct-tagger",
-  "version": "1.0.0",
-  "platform": "win",
+  "version": "1.0.1",
+  "platform": "all",
   "arch": "all",
   "name": "Eagle CT Tagger",
   "logo": "/logo.png",
